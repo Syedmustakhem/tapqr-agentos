@@ -1,0 +1,74 @@
+
+---
+
+# 3. Create the Architecture document
+
+Run:
+
+```powershell
+@'
+# TapQR AgentOS Architecture
+
+## 1. Purpose
+
+TapQR AgentOS is an intelligence and controlled-action layer placed between an agent interface such as Alexa+ and the existing TapQR business platform.
+
+The architecture must allow the agent to:
+
+1. Observe business signals.
+2. Correlate information across domains.
+3. Detect meaningful customer-journey problems.
+4. Explain the evidence.
+5. Propose an action.
+6. Obtain explicit approval when required.
+7. Execute the approved action.
+8. Verify the resulting state.
+9. Measure the outcome.
+
+---
+
+## 2. High-Level Architecture
+
+```text
+                         ┌─────────────────┐
+                         │     Alexa+      │
+                         └────────┬────────┘
+                                  │
+                                  │ MCP
+                                  ▼
+                    ┌──────────────────────────┐
+                    │ Alexa+ MCP Add-on        │
+                    └────────────┬─────────────┘
+                                 │
+                                 │ Streamable HTTP
+                                 ▼
+                    ┌──────────────────────────┐
+                    │ TapQR AgentOS MCP Server │
+                    │                          │
+                    │ Tool Layer               │
+                    │ Intelligence Layer       │
+                    │ Approval Layer           │
+                    │ Verification Layer       │
+                    └────────────┬─────────────┘
+                                 │
+                                 │ authenticated
+                                 │ business actions
+                                 ▼
+                    ┌──────────────────────────┐
+                    │ Existing TapQR Backend   │
+                    │                          │
+                    │ Auth                     │
+                    │ Businesses               │
+                    │ Campaigns                │
+                    │ QR Codes                 │
+                    │ Analytics                │
+                    │ QR Rules                 │
+                    │ Experiments              │
+                    │ Leads                    │
+                    │ WhatsApp                 │
+                    └────────────┬─────────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────────┐
+                    │ Prisma / PostgreSQL      │
+                    └──────────────────────────┘
