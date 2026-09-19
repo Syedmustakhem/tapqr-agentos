@@ -1,12 +1,14 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 
-const SERVER_NAME = "tapqr-agentos";
-const SERVER_VERSION = "0.1.0";
+import {
+  emptyToolInputSchema
+} from "./schemas.js";
 
-const statusInputSchema = {
-  input: z.object({})
-};
+const SERVER_NAME =
+  "tapqr-agentos";
+
+const SERVER_VERSION =
+  "0.1.0";
 
 export function registerStatusTool(
   server: McpServer
@@ -15,9 +17,15 @@ export function registerStatusTool(
     "agentos_status",
     {
       title: "AgentOS Status",
+
       description:
         "Return the current TapQR AgentOS MCP server status and implementation stage.",
-      inputSchema: statusInputSchema,
+
+      inputSchema: {
+        input:
+          emptyToolInputSchema
+      },
+
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -25,20 +33,49 @@ export function registerStatusTool(
         openWorldHint: false
       }
     },
-    async () => ({
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify({
-            service: SERVER_NAME,
-            version: SERVER_VERSION,
-            status: "ok",
-            stage: "mcp-foundation",
-            capabilities: ["tools"],
-            sideEffects: false
-          })
-        }
-      ]
-    })
+
+    async () => {
+      const output = {
+        service:
+          SERVER_NAME,
+
+        version:
+          SERVER_VERSION,
+
+        status:
+          "ok",
+
+        stage:
+          "phase-2-read-only-tools",
+
+        capabilities: [
+          "tools"
+        ],
+
+        tools: [
+          "agentos_status",
+          "get_qr_funnel"
+        ],
+
+        sideEffects:
+          false
+      };
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(
+              output,
+              null,
+              2
+            )
+          }
+        ],
+
+        structuredContent:
+          output
+      };
+    }
   );
 }
