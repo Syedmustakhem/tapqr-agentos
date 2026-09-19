@@ -1,74 +1,21 @@
+MIT License
 
----
+Copyright (c) 2026 Syedmustakhem
 
-# 3. Create the Architecture document
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Run:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-```powershell
-@'
-# TapQR AgentOS Architecture
-
-## 1. Purpose
-
-TapQR AgentOS is an intelligence and controlled-action layer placed between an agent interface such as Alexa+ and the existing TapQR business platform.
-
-The architecture must allow the agent to:
-
-1. Observe business signals.
-2. Correlate information across domains.
-3. Detect meaningful customer-journey problems.
-4. Explain the evidence.
-5. Propose an action.
-6. Obtain explicit approval when required.
-7. Execute the approved action.
-8. Verify the resulting state.
-9. Measure the outcome.
-
----
-
-## 2. High-Level Architecture
-
-```text
-                         ┌─────────────────┐
-                         │     Alexa+      │
-                         └────────┬────────┘
-                                  │
-                                  │ MCP
-                                  ▼
-                    ┌──────────────────────────┐
-                    │ Alexa+ MCP Add-on        │
-                    └────────────┬─────────────┘
-                                 │
-                                 │ Streamable HTTP
-                                 ▼
-                    ┌──────────────────────────┐
-                    │ TapQR AgentOS MCP Server │
-                    │                          │
-                    │ Tool Layer               │
-                    │ Intelligence Layer       │
-                    │ Approval Layer           │
-                    │ Verification Layer       │
-                    └────────────┬─────────────┘
-                                 │
-                                 │ authenticated
-                                 │ business actions
-                                 ▼
-                    ┌──────────────────────────┐
-                    │ Existing TapQR Backend   │
-                    │                          │
-                    │ Auth                     │
-                    │ Businesses               │
-                    │ Campaigns                │
-                    │ QR Codes                 │
-                    │ Analytics                │
-                    │ QR Rules                 │
-                    │ Experiments              │
-                    │ Leads                    │
-                    │ WhatsApp                 │
-                    └────────────┬─────────────┘
-                                 │
-                                 ▼
-                    ┌──────────────────────────┐
-                    │ Prisma / PostgreSQL      │
-                    └──────────────────────────┘
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
