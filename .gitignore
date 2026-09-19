@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+out/
+
+# Test / coverage output
+coverage/
+.nyc_output/
+
+# Runtime logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editor files
+.vscode/
+.idea/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Package manager debug logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local MCP / application runtime data
+.data/
+.local/
+
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+
+# Generated files
+*.generated.*
