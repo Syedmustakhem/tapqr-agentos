@@ -58,3 +58,16 @@ export const getQrFunnelInputSchema = {
     )
     
 };
+
+export const getBusinessContextInputSchema = {
+  businessId: z
+    .string()
+    .trim()
+    .min(
+      1,
+      "businessId is required."
+    )
+    .describe(
+      "The TapQR business ID whose context should be retrieved."
+    )
+};

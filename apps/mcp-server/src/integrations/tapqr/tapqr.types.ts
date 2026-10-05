@@ -75,3 +75,33 @@ export interface TapqrJourneyAnalytics {
   dailyJourney: TapqrJourneyDailyRow[];
   byQr: TapqrJourneyQrRow[];
 }
+
+export interface TapqrBusiness {
+  id: string;
+  ownerId: string;
+  name: string;
+  legalName: string | null;
+  displayName: string | null;
+  slug: string;
+  businessType: string | null;
+  industry: string | null;
+  category: string | null;
+  subcategory: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  whatsapp: string | null;
+  logo: string | null;
+  coverImage: string | null;
+  description: string | null;
+  timezone: string;
+  currency: string;
+  language: string;
+  country: string;
+  status: string;
+  isVerified: boolean;
+  isPublished: boolean;
+  onboardingCompleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
