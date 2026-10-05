@@ -1,64 +1,35 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 
-import {
-  TapQrApiClient
-} from "../../integrations/tapqr/tapqr-api-client.js";
+import { TapqrApiClient } from "../../integrations/tapqr/index.js";
+import { getBusinessContextInputSchema } from "../../analytics/schema.js";
 
-const inputSchema = {
-  input: z.object({})
-};
+import type { TapqrBusiness } from "../../integrations/tapqr/index.js";
 
-function sanitizeBusiness(
-  business: Awaited<
-    ReturnType<TapQrApiClient["getBusiness"]>
-  >
-) {
+function sanitizeBusiness(business: TapqrBusiness) {
   return {
     id: business.id,
     name: business.name,
-    legalName:
-      business.legalName ?? null,
-    displayName:
-      business.displayName ?? null,
-    slug:
-      business.slug ?? null,
+    legalName: business.legalName,
+    displayName: business.displayName,
+    slug: business.slug,
 
-    businessType:
-      business.businessType ?? null,
-    industry:
-      business.industry ?? null,
-    category:
-      business.category ?? null,
-    subcategory:
-      business.subcategory ?? null,
+    businessType: business.businessType,
+    industry: business.industry,
+    category: business.category,
+    subcategory: business.subcategory,
 
-    description:
-      business.description ?? null,
+    description: business.description,
+    website: business.website,
 
-    website:
-      business.website ?? null,
+    country: business.country,
+    timezone: business.timezone,
+    currency: business.currency,
+    language: business.language,
 
-    country:
-      business.country ?? null,
-    timezone:
-      business.timezone ?? null,
-    currency:
-      business.currency ?? null,
-    language:
-      business.language ?? null,
-
-    status:
-      business.status ?? null,
-
-    isVerified:
-      business.isVerified ?? false,
-
-    isPublished:
-      business.isPublished ?? false,
-
-    onboardingCompleted:
-      business.onboardingCompleted ?? false
+    status: business.status,
+    isVerified: business.isVerified,
+    isPublished: business.isPublished,
+    onboardingCompleted: business.onboardingCompleted,
   };
 }
 
@@ -71,46 +42,40 @@ export function registerGetBusinessContextTool(
       title: "Get Business Context",
 
       description:
-        "Read the authenticated TapQR business context. Returns safe business identity, classification, localization, lifecycle, verification, and publishing information. This tool is read-only and has no side effects.",
+        "Retrieve the TapQR business context for a business. " +
+        "Returns safe business identity, classification, localization, " +
+        "lifecycle, verification, and publishing information. " +
+        "This tool is read-only and does not modify business data.",
 
-      inputSchema,
+      inputSchema: getBusinessContextInputSchema,
 
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
-        openWorldHint: false
-      }
+        openWorldHint: false,
+      },
     },
 
-    async () => {
-      const client =
-        new TapQrApiClient();
+    async ({ businessId }) => {
+      const client = new TapqrApiClient();
 
-      const business =
-        await client.getBusiness();
+      const business = await client.getBusiness(businessId);
 
-      const safeBusiness =
-        sanitizeBusiness(business);
+      const output = {
+        businessId,
+        business: sanitizeBusiness(business),
+      };
 
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(
-              {
-                business:
-                  safeBusiness,
+            text: JSON.stringify(output, null, 2),
+          },
+        ],
 
-                source:
-                  "tapqr-api",
-
-                sideEffects:
-                  false
-              }
-            )
-          }
-        ]
+        structuredContent: output,
       };
     }
   );

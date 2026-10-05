@@ -8,6 +8,7 @@ export type {
 
 export type {
   TapqrJourneyAnalytics,
+  TapqrBusiness,
   TapqrJourneyDailyRow,
   TapqrJourneyFunnelStage,
   TapqrJourneyOverview,

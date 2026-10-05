@@ -15,6 +15,9 @@ import type {
   TapqrCampaignPerformancePeriod,
   TapqrCampaignPerformanceSummary
 } from "./tapqr.types.js";
+import type {
+  TapqrBusiness
+} from "./tapqr.types.js";
 
 function parseCampaign(
   value: unknown
@@ -218,6 +221,85 @@ function asObject(
   }
 
   return value;
+}
+
+function asBoolean(
+  value: unknown,
+  field: string
+): boolean {
+  if (typeof value !== "boolean") {
+    throw new AgentOsError(
+      "INTERNAL_ERROR",
+      `TapQR returned an invalid ${field}.`
+    );
+  }
+
+  return value;
+}
+
+function asNullableString(
+  value: unknown,
+  field: string
+): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  return asString(value, field);
+}
+
+export function extractBusiness(
+  payload: unknown
+): TapqrBusiness {
+  const root = asObject(
+    payload,
+    "business response"
+  );
+
+  if (root.success !== true) {
+    throw new AgentOsError(
+      "UPSTREAM_UNAVAILABLE",
+      "TapQR returned an unsuccessful business response."
+    );
+  }
+
+  const data = asObject(
+    root.data,
+    "business data"
+  );
+
+  return {
+    id: asString(data.id, "business.id"),
+    ownerId: asString(data.ownerId, "business.ownerId"),
+    name: asString(data.name, "business.name"),
+    legalName: asNullableString(data.legalName, "business.legalName"),
+    displayName: asNullableString(data.displayName, "business.displayName"),
+    slug: asString(data.slug, "business.slug"),
+    businessType: asNullableString(data.businessType, "business.businessType"),
+    industry: asNullableString(data.industry, "business.industry"),
+    category: asNullableString(data.category, "business.category"),
+    subcategory: asNullableString(data.subcategory, "business.subcategory"),
+    email: asNullableString(data.email, "business.email"),
+    phone: asNullableString(data.phone, "business.phone"),
+    website: asNullableString(data.website, "business.website"),
+    whatsapp: asNullableString(data.whatsapp, "business.whatsapp"),
+    logo: asNullableString(data.logo, "business.logo"),
+    coverImage: asNullableString(data.coverImage, "business.coverImage"),
+    description: asNullableString(data.description, "business.description"),
+    timezone: asString(data.timezone, "business.timezone"),
+    currency: asString(data.currency, "business.currency"),
+    language: asString(data.language, "business.language"),
+    country: asString(data.country, "business.country"),
+    status: asString(data.status, "business.status"),
+    isVerified: asBoolean(data.isVerified, "business.isVerified"),
+    isPublished: asBoolean(data.isPublished, "business.isPublished"),
+    onboardingCompleted: asBoolean(
+      data.onboardingCompleted,
+      "business.onboardingCompleted"
+    ),
+    createdAt: asString(data.createdAt, "business.createdAt"),
+    updatedAt: asString(data.updatedAt, "business.updatedAt")
+  };
 }
 
 function asArray(

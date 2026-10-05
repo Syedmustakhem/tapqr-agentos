@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { registerStatusTool } from "./tools/system/status.js";
+import { registerAllTools } from "./tools/registry.js";
 
 const SERVER_NAME = "tapqr-agentos";
 const SERVER_VERSION = "0.1.0";
@@ -18,7 +18,7 @@ export function createMcpServer(): McpServer {
     }
   );
 
-  registerStatusTool(server);
+  registerAllTools(server);
 
   return server;
 }

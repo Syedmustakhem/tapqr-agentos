@@ -6,7 +6,7 @@ import {
 
 import {
   getCampaignPerformanceInputSchema
-} from "./schemas.js";
+} from "./schema.js";
 
 export function registerGetCampaignPerformanceTool(
   server: McpServer

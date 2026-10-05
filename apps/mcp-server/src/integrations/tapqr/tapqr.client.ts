@@ -8,11 +8,13 @@ import {
   extractCampaignPerformance,
   extractJourneyAnalytics
 } from "./tapqr.parsers.js";
+import { extractBusiness } from "./tapqr.parsers.js";
 
 import type {
   TapqrCampaignPerformance,
   TapqrJourneyAnalytics
 } from "./tapqr.types.js";
+import type { TapqrBusiness } from "./tapqr.types.js";
 
 export interface TapqrApiClientOptions {
   baseUrl?: string;
@@ -200,6 +202,24 @@ export class TapqrApiClient {
       );
 
     return extractCampaignPerformance(
+      payload
+    );
+  }
+
+  async getBusiness(
+    businessId: string
+  ): Promise<TapqrBusiness> {
+    const encodedBusinessId =
+      encodeURIComponent(
+        businessId
+      );
+
+    const payload =
+      await this.request(
+        `/api/businesses/${encodedBusinessId}`
+      );
+
+    return extractBusiness(
       payload
     );
   }
