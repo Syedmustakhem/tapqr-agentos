@@ -5,6 +5,8 @@ import express, {
 } from "express";
 import { randomUUID } from "node:crypto";
 
+import { fileURLToPath } from "node:url";
+
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
@@ -21,6 +23,12 @@ export function createHttpApp(): Express {
   const app = express();
 
   app.use(express.json());
+
+app.use(
+  express.static(
+    fileURLToPath(new URL("../../public/", import.meta.url))
+  )
+);
 
   app.get("/health", (_req: Request, res: Response) => {
     res.status(200).json({

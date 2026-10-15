@@ -21,10 +21,7 @@ export function registerStatusTool(
       description:
         "Return the current TapQR AgentOS MCP server status and implementation stage.",
 
-      inputSchema: {
-        input:
-          emptyToolInputSchema
-      },
+      inputSchema: emptyToolInputSchema.shape,
 
       annotations: {
         readOnlyHint: true,
