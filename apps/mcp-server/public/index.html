@@ -1,0 +1,878 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101114" />
+  <title>TapQR AgentOS | MCP Console</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101114;
+      --panel: #181a20;
+      --panel2: #20232b;
+      --border: #30333d;
+      --text: #f5f6f8;
+      --muted: #a2a8b5;
+      --accent: #b7f36b;
+      --danger: #ff8585;
+      --success: #b7f36b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at top left, #29351d 0%, transparent 36%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 15px;
+      color: var(--text);
+      background: var(--panel2);
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      color: #11150c;
+      background: var(--accent);
+      border-color: var(--accent);
+      font-weight: 750;
+    }
+
+    button:hover:not(:disabled) { filter: brightness(1.08); }
+
+    input, select, textarea {
+      width: 100%;
+      color: var(--text);
+      background: #111318;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 155px;
+      resize: vertical;
+      font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .shell {
+      max-width: 1120px;
+      padding: 32px 20px 56px;
+      margin: auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: var(--accent);
+      color: #11150c;
+      font-weight: 900;
+      font-size: 20px;
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 { font-size: clamp(25px, 4vw, 36px); margin-bottom: 5px; }
+    h2 { font-size: 17px; margin-bottom: 8px; }
+    p { color: var(--muted); line-height: 1.6; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .eyebrow { color: var(--accent); text-transform: uppercase;
+      letter-spacing: .13em; font-size: 11px; font-weight: 800; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      padding: 9px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #818794;
+    }
+
+    .dot.connected { background: var(--success); }
+
+    .hero {
+      padding: 25px;
+      border: 1px solid var(--border);
+      background: rgba(24, 26, 32, .92);
+      border-radius: 18px;
+      margin-bottom: 20px;
+    }
+
+    .hero p { margin-bottom: 0; max-width: 700px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 22px;
+      border: 1px solid var(--border);
+      background: rgba(24, 26, 32, .96);
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .step {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--panel2);
+      color: var(--accent);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .field { margin-bottom: 17px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .tool-list {
+      display: grid;
+      gap: 9px;
+      margin-top: 15px;
+    }
+
+    .tool {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #14161b;
+    }
+
+    .tool-name {
+      font: 12px ui-monospace, SFMono-Regular, Consolas, monospace;
+      color: var(--accent);
+      overflow-wrap: anywhere;
+    }
+
+    .tool-description {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+
+    .response {
+      min-height: 220px;
+      max-height: 500px;
+      overflow: auto;
+      padding: 15px;
+      background: #0d0f13;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font: 12px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    .message { margin-bottom: 13px; }
+    .message:last-child { margin-bottom: 0; }
+    .message-title {
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    .error { color: var(--danger); }
+    .success { color: var(--success); }
+
+    .protocol {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 9px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+      .shell { padding: 20px 13px 40px; }
+      .hero, .panel { padding: 17px; }
+      header { align-items: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">
+        <div class="logo">T</div>
+        <div>
+          <div class="eyebrow">TapQR AgentOS</div>
+          <div style="font-weight:800">MCP Developer Console</div>
+        </div>
+      </div>
+
+      <div class="status">
+        <span id="statusDot" class="dot"></span>
+        <span id="statusText">Not connected</span>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Hackathon demo · Alexa+</div>
+      <h1>Business intelligence, through tools.</h1>
+      <p>
+        Connect to TapQR AgentOS, discover its available MCP tools,
+        and run real business analytics workflows through Streamable HTTP.
+      </p>
+      <div class="protocol">
+        <span class="tag">MCP</span>
+        <span class="tag">Streamable HTTP</span>
+        <span class="tag">Live tool discovery</span>
+        <span class="tag">Tool execution</span>
+      </div>
+    </section>
+
+    <div class="layout">
+      <section>
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>1. Connect to your MCP server</h2>
+              <p class="muted">Start with the local server, then deploy it.</p>
+            </div>
+            <div class="step">01</div>
+          </div>
+
+          <div class="field">
+            <label for="endpoint">MCP endpoint URL</label>
+            <input
+              id="endpoint"
+              type="url"
+              value="/mcp"
+              placeholder="https://your-domain.com/mcp"
+              autocomplete="url"
+            />
+            <p class="muted" style="margin:7px 0 0">
+              For local development, leave this as /mcp.
+            </p>
+          </div>
+
+          <div class="actions">
+            <button id="connectButton" class="primary">Connect &amp; discover tools</button>
+            <button id="disconnectButton" disabled>Disconnect</button>
+          </div>
+
+          <div id="connectionMessage" class="muted" role="status" style="margin-top:14px">
+            Waiting for connection.
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>2. Available MCP tools</h2>
+              <p class="muted">Tools discovered from the connected server.</p>
+            </div>
+            <div class="step">02</div>
+          </div>
+
+          <div id="toolCount" class="muted">No tools discovered yet.</div>
+          <div id="toolList" class="tool-list"></div>
+        </div>
+      </section>
+
+      <section>
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>3. Execute a tool</h2>
+              <p class="muted">Choose a tool and supply valid JSON arguments.</p>
+            </div>
+            <div class="step">03</div>
+          </div>
+
+          <div class="field">
+            <label for="toolSelect">Tool</label>
+            <select id="toolSelect" disabled>
+              <option value="">Connect to discover tools</option>
+            </select>
+          </div>
+
+          <div id="selectedToolDescription" class="muted" style="margin-bottom:15px">
+            Tool descriptions will appear here.
+          </div>
+
+          <div class="field">
+            <label for="argumentsInput">Arguments (JSON)</label>
+            <textarea
+              id="argumentsInput"
+              spellcheck="false"
+              aria-label="Tool arguments JSON"
+            >{}</textarea>
+          </div>
+
+          <div class="actions">
+            <button id="callButton" class="primary" disabled>Call tool</button>
+            <button id="formatButton">Format JSON</button>
+            <button id="clearButton">Clear response</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>4. Execution result</h2>
+              <p class="muted">The actual response returned by the MCP server.</p>
+            </div>
+            <div class="step">04</div>
+          </div>
+
+          <div id="response" class="response" aria-live="polite">No tool call yet.</div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      TapQR AgentOS · MCP requests are sent to the endpoint configured above.
+    </footer>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+
+    const endpointInput = $("endpoint");
+    const connectButton = $("connectButton");
+    const disconnectButton = $("disconnectButton");
+    const statusText = $("statusText");
+    const statusDot = $("statusDot");
+    const connectionMessage = $("connectionMessage");
+    const toolSelect = $("toolSelect");
+    const toolList = $("toolList");
+    const toolCount = $("toolCount");
+    const selectedToolDescription = $("selectedToolDescription");
+    const argumentsInput = $("argumentsInput");
+    const callButton = $("callButton");
+    const responsePanel = $("response");
+
+    let sessionId = null;
+    let protocolVersion = null;
+    let tools = [];
+    let requestId = 0;
+    let connected = false;
+    let busy = false;
+
+    function setStatus(message, isConnected = false) {
+      statusText.textContent = message;
+      statusDot.classList.toggle("connected", isConnected);
+    }
+
+    function showConnectionMessage(message, isError = false) {
+      connectionMessage.textContent = message;
+      connectionMessage.classList.toggle("error", isError);
+      connectionMessage.classList.toggle("success", !isError);
+    }
+
+    function showResponse(title, content, isError = false) {
+      responsePanel.replaceChildren();
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "message";
+
+      const heading = document.createElement("div");
+      heading.className = "message-title";
+      heading.textContent = title;
+
+      const body = document.createElement("div");
+      body.className = isError ? "error" : "";
+      body.textContent = typeof content === "string"
+        ? content
+        : JSON.stringify(content, null, 2);
+
+      wrapper.append(heading, body);
+      responsePanel.append(wrapper);
+    }
+
+    function setBusy(value) {
+      busy = value;
+      connectButton.disabled = value;
+      callButton.disabled = value || !connected || !toolSelect.value;
+      disconnectButton.disabled = value || !connected;
+      toolSelect.disabled = value || !connected;
+      endpointInput.disabled = value || connected;
+    }
+
+    function getEndpoint() {
+      const value = endpointInput.value.trim();
+
+      if (!value) {
+        throw new Error("Enter an MCP endpoint URL.");
+      }
+
+      // A relative endpoint such as /mcp uses this page's origin.
+      const url = new URL(value, window.location.href);
+
+      if (!["http:", "https:"].includes(url.protocol)) {
+        throw new Error("The endpoint must use HTTP or HTTPS.");
+      }
+
+      if (
+        window.location.protocol === "https:" &&
+        url.protocol === "http:"
+      ) {
+        throw new Error("An HTTPS page cannot call an insecure HTTP endpoint.");
+      }
+
+      return url;
+    }
+
+    function getRequestHeaders(includeSession = true) {
+      const headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream"
+      };
+
+      if (includeSession && sessionId) {
+        headers["Mcp-Session-Id"] = sessionId;
+      }
+
+      if (includeSession && protocolVersion) {
+        headers["MCP-Protocol-Version"] = protocolVersion;
+      }
+
+      return headers;
+    }
+
+    async function parseRpcResponse(response) {
+      const raw = await response.text();
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP ${response.status}: ${raw || response.statusText}`
+        );
+      }
+
+      if (!raw.trim()) {
+        return null;
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+
+      if (contentType.includes("text/event-stream")) {
+        // Streamable HTTP may return a Server-Sent Events stream.
+        const events = raw.split(/\r?\n\r?\n/);
+        const dataMessages = [];
+
+        for (const event of events) {
+          const data = event
+            .split(/\r?\n/)
+            .filter((line) => line.startsWith("data:"))
+            .map((line) => line.slice(5).trimStart())
+            .join("\n");
+
+          if (data && data !== "[DONE]") {
+            dataMessages.push(data);
+          }
+        }
+
+        for (let i = dataMessages.length - 1; i >= 0; i--) {
+          try {
+            return JSON.parse(dataMessages[i]);
+          } catch {
+            // Ignore non-JSON event data and inspect earlier events.
+          }
+        }
+
+        throw new Error("The server returned SSE but no JSON-RPC response was found.");
+      }
+
+      try {
+        return JSON.parse(raw);
+      } catch {
+        throw new Error(`The server returned an unexpected response: ${raw.slice(0, 500)}`);
+      }
+    }
+
+    async function sendRpc(method, params = {}) {
+      const endpoint = getEndpoint();
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: getRequestHeaders(),
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: ++requestId,
+          method,
+          params
+        })
+      });
+
+      const payload = await parseRpcResponse(response);
+
+      if (payload?.error) {
+        throw new Error(
+          `MCP error ${payload.error.code}: ${payload.error.message}`
+        );
+      }
+
+      if (payload && payload.id !== undefined && payload.result === undefined) {
+        throw new Error("The MCP response did not contain a result.");
+      }
+
+      return payload?.result ?? null;
+    }
+
+    function renderTools() {
+      toolList.replaceChildren();
+      toolSelect.replaceChildren();
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select a tool";
+      toolSelect.append(placeholder);
+
+      for (const tool of tools) {
+        const option = document.createElement("option");
+        option.value = tool.name;
+        option.textContent = tool.name;
+        toolSelect.append(option);
+
+        const card = document.createElement("div");
+        card.className = "tool";
+
+        const name = document.createElement("div");
+        name.className = "tool-name";
+        name.textContent = tool.name;
+
+        const description = document.createElement("div");
+        description.className = "tool-description";
+        description.textContent = tool.description || "No description provided.";
+
+        card.append(name, description);
+        toolList.append(card);
+      }
+
+      toolCount.textContent = `${tools.length} tool${tools.length === 1 ? "" : "s"} discovered.`;
+      toolSelect.disabled = !connected;
+      callButton.disabled = !connected || !toolSelect.value || busy;
+    }
+
+    function selectCurrentTool() {
+      const tool = tools.find((item) => item.name === toolSelect.value);
+
+      selectedToolDescription.textContent = tool
+        ? (tool.description || "No description provided.")
+        : "Select a tool to view its description.";
+
+      if (tool) {
+        // This is a starting template only. Fill in required fields
+        // according to the schema shown by the server.
+        argumentsInput.value = JSON.stringify({}, null, 2);
+      }
+
+      callButton.disabled = !connected || !tool || busy;
+    }
+
+    async function connect() {
+      if (busy) return;
+
+      setBusy(true);
+      setStatus("Connecting…");
+      showConnectionMessage("Initializing MCP session…");
+      showResponse("Connection", "Sending initialize request…");
+
+      sessionId = null;
+      protocolVersion = null;
+      tools = [];
+      connected = false;
+
+      try {
+        const endpoint = getEndpoint();
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json, text/event-stream"
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: ++requestId,
+            method: "initialize",
+            params: {
+              protocolVersion: "2025-11-25",
+              capabilities: {},
+              clientInfo: {
+                name: "tapqr-agentos-web-console",
+                version: "1.0.0"
+              }
+            }
+          })
+        });
+
+        const returnedSessionId = response.headers.get("Mcp-Session-Id");
+        if (returnedSessionId) {
+          sessionId = returnedSessionId;
+        }
+
+        
+const initializePayload = await parseRpcResponse(response);
+
+if (initializePayload?.error) {
+  throw new Error(
+    `MCP initialize error ${initializePayload.error.code}: ` +
+    initializePayload.error.message
+  );
+}
+
+const result = initializePayload?.result;
+
+if (!result || !result.protocolVersion || !result.serverInfo) {
+  throw new Error(
+    "The initialize response is missing protocolVersion or serverInfo."
+  );
+}
+
+        protocolVersion = result.protocolVersion;
+
+        if (protocolVersion !== "2025-11-25") {
+          throw new Error(
+            `Server negotiated protocol ${protocolVersion}, not 2025-11-25. ` +
+            "Check the server SDK and MCP protocol compatibility before submission."
+          );
+        }
+
+        if (!sessionId) {
+          throw new Error(
+            "The server did not return an MCP session ID. " +
+            "This console expects the configured stateful Streamable HTTP transport."
+          );
+        }
+
+        // The client confirms initialization before sending normal MCP requests.
+        const initializedResponse = await fetch(endpoint, {
+          method: "POST",
+          headers: getRequestHeaders(),
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "notifications/initialized"
+          })
+        });
+
+        if (!initializedResponse.ok) {
+          throw new Error(
+            `Initialization notification failed: HTTP ${initializedResponse.status}`
+          );
+        }
+
+        const listResult = await sendRpc("tools/list");
+
+        if (!listResult || !Array.isArray(listResult.tools)) {
+          throw new Error("The server did not return a valid tools/list response.");
+        }
+
+        tools = listResult.tools;
+        connected = true;
+
+        renderTools();
+        setStatus("Connected", true);
+        showConnectionMessage(
+          `Connected to ${result.serverInfo.name} · MCP ${protocolVersion}`
+        );
+
+        showResponse("MCP initialize", {
+          serverInfo: result.serverInfo,
+          protocolVersion,
+          toolCount: tools.length,
+          tools: tools.map((tool) => tool.name)
+        });
+      } catch (error) {
+        connected = false;
+        sessionId = null;
+        protocolVersion = null;
+        tools = [];
+        renderTools();
+        setStatus("Connection failed");
+        showConnectionMessage(error.message || String(error), true);
+        showResponse("Connection error", error.message || String(error), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function callTool() {
+      if (!connected || busy) return;
+
+      const toolName = toolSelect.value;
+
+      if (!toolName) {
+        showResponse("Validation", "Select a tool first.", true);
+        return;
+      }
+
+      let args;
+
+      try {
+        args = JSON.parse(argumentsInput.value || "{}");
+      } catch (error) {
+        showResponse("Invalid JSON", error.message, true);
+        return;
+      }
+
+      if (!args || Array.isArray(args) || typeof args !== "object") {
+        showResponse("Invalid arguments", "Arguments must be a JSON object.", true);
+        return;
+      }
+
+      setBusy(true);
+      showResponse("Tool execution", `Calling ${toolName}…`);
+
+      try {
+        const result = await sendRpc("tools/call", {
+          name: toolName,
+          arguments: args
+        });
+
+        showResponse(`Result · ${toolName}`, result);
+
+        if (result?.isError) {
+          showConnectionMessage(`Tool ${toolName} returned an error.`, true);
+        } else {
+          showConnectionMessage(`Successfully called ${toolName}.`);
+        }
+      } catch (error) {
+        showResponse(`Tool error · ${toolName}`, error.message || String(error), true);
+        showConnectionMessage(error.message || String(error), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function disconnect() {
+      // The current server does not expose a dedicated session-close route.
+      // Clear this browser client's state; the server can expire/close the session.
+      connected = false;
+      sessionId = null;
+      protocolVersion = null;
+      tools = [];
+
+      renderTools();
+      setStatus("Not connected");
+      showConnectionMessage("Disconnected from the MCP session.");
+      showResponse("Session", "Browser client disconnected.");
+
+      connectButton.disabled = false;
+      disconnectButton.disabled = true;
+      endpointInput.disabled = false;
+      toolSelect.disabled = true;
+      callButton.disabled = true;
+    }
+
+    connectButton.addEventListener("click", connect);
+    disconnectButton.addEventListener("click", disconnect);
+    callButton.addEventListener("click", callTool);
+    toolSelect.addEventListener("change", selectCurrentTool);
+
+    $("formatButton").addEventListener("click", () => {
+      try {
+        argumentsInput.value = JSON.stringify(
+          JSON.parse(argumentsInput.value || "{}"),
+          null,
+          2
+        );
+        showConnectionMessage("Arguments JSON formatted.");
+      } catch (error) {
+        showResponse("Invalid JSON", error.message, true);
+      }
+    });
+
+    $("clearButton").addEventListener("click", () => {
+      showResponse("Execution result", "Response cleared.");
+    });
+
+    // The static page is served from the same origin as /mcp.
+    // Connect manually so the user controls when a session is created.
+    renderTools();
+  </script>
+</body>
+</html>
