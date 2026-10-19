@@ -75,7 +75,38 @@ export interface TapqrJourneyAnalytics {
   dailyJourney: TapqrJourneyDailyRow[];
   byQr: TapqrJourneyQrRow[];
 }
-
+export interface TapqrBusinessOverview {
+  period: TapqrJourneyPeriod;
+  overview: {
+    totalScans: number;
+    uniqueVisitors: number;
+    previousPeriodScans: number;
+    percentageChange: number;
+    activeQrCodes: number;
+    totalQrCodes: number;
+    averageDailyScans: number;
+    totalConversions: number;
+    uniqueConverters: number;
+    conversionRate: number;
+    previousPeriodConversions: number;
+    conversionPercentageChange: number;
+  };
+  scansByDay: Array<{
+    date: string;
+    scans: number;
+  }>;
+  qrPerformance: Array<{
+    id: string;
+    name: string;
+    shortCode: string;
+    scanCount: number;
+    status: string;
+    type: string;
+    experienceType: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+}
 export interface TapqrBusiness {
   id: string;
   ownerId: string;

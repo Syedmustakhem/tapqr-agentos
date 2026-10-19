@@ -1,21 +1,23 @@
-import {
-  AgentOsError
-} from "../../errors/agentos-error.js";
 
+import { AgentOsError } from "../../errors/agentos-error.js";
 import { env } from "../../config/env.js";
-
 import {
   extractCampaignPerformance,
-  extractJourneyAnalytics
+  extractJourneyAnalytics,
+  extractBusiness,
 } from "./tapqr.parsers.js";
-import { extractBusiness } from "./tapqr.parsers.js";
-
 import type {
   TapqrCampaignPerformance,
-  TapqrJourneyAnalytics
+  TapqrJourneyAnalytics,
+  TapqrBusiness,
 } from "./tapqr.types.js";
-import type { TapqrBusiness } from "./tapqr.types.js";
+import {
+  extractBusinessOverview,
+} from "./tapqr.parsers.js";
 
+import type {
+  TapqrBusinessOverview,
+} from "./tapqr.types.js";
 export interface TapqrApiClientOptions {
   baseUrl?: string;
   timeoutMs?: number;
@@ -24,66 +26,48 @@ export interface TapqrApiClientOptions {
 
 export class TapqrApiClient {
   private readonly baseUrl: string;
-
   private readonly timeoutMs: number;
-
   private readonly accessToken: string | undefined;
 
-  constructor(
-    options: TapqrApiClientOptions = {}
-  ) {
-    this.baseUrl =
-      options.baseUrl ??
-      env.TAPQR_API_BASE_URL;
-
-    this.timeoutMs =
-      options.timeoutMs ??
-      env.TAPQR_API_TIMEOUT_MS;
-
-    this.accessToken =
-      options.accessToken ??
-      env.TAPQR_API_TOKEN;
+  constructor(options: TapqrApiClientOptions = {}) {
+    this.baseUrl = options.baseUrl ?? env.TAPQR_API_BASE_URL;
+    this.timeoutMs = options.timeoutMs ?? env.TAPQR_API_TIMEOUT_MS;
+    this.accessToken = options.accessToken ?? env.TAPQR_API_TOKEN;
   }
 
   private buildHeaders(): Headers {
     const headers = new Headers();
 
-    headers.set(
-      "Accept",
-      "application/json"
-    );
+    headers.set("Accept", "application/json");
 
-    if (this.accessToken) {
-      headers.set(
-        "Authorization",
-        `Bearer ${this.accessToken}`
-      );
+    if (this.accessToken?.trim()) {
+      headers.set("Authorization", `Bearer ${this.accessToken.trim()}`);
     }
 
     return headers;
   }
 
-  private async request(
-    path: string
-  ): Promise<unknown> {
-    const controller =
-      new AbortController();
-
-    const timeout =
-      setTimeout(
-        () => controller.abort(),
-        this.timeoutMs
+  private async request(path: string): Promise<unknown> {
+    // Prevent requests when API credentials are missing or blank.
+    if (!this.accessToken?.trim()) {
+      throw new AgentOsError(
+        "AUTHENTICATION_FAILED",
+        "TapQR API credentials are not configured."
       );
+    }
+
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, this.timeoutMs);
 
     try {
-      const response = await fetch(
-        `${this.baseUrl}${path}`,
-        {
-          method: "GET",
-          headers: this.buildHeaders(),
-          signal: controller.signal
-        }
-      );
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        method: "GET",
+        headers: this.buildHeaders(),
+        signal: controller.signal,
+      });
 
       if (response.status === 401) {
         throw new AgentOsError(
@@ -134,7 +118,7 @@ export class TapqrApiClient {
       }
 
       if (
-        error instanceof DOMException &&
+        error instanceof Error &&
         error.name === "AbortError"
       ) {
         throw new AgentOsError(
@@ -156,71 +140,53 @@ export class TapqrApiClient {
     businessId: string,
     days: number
   ): Promise<TapqrJourneyAnalytics> {
-    const encodedBusinessId =
-      encodeURIComponent(
-        businessId
-      );
+    const encodedBusinessId = encodeURIComponent(businessId);
+    const encodedDays = encodeURIComponent(String(days));
 
-    const encodedDays =
-      encodeURIComponent(
-        String(days)
-      );
-
-    const payload =
-      await this.request(
-        `/api/analytics/business/${encodedBusinessId}/journey?days=${encodedDays}`
-      );
-
-    return extractJourneyAnalytics(
-      payload
+    const payload = await this.request(
+      `/api/analytics/business/${encodedBusinessId}/journey?days=${encodedDays}`
     );
-  }
 
+    return extractJourneyAnalytics(payload);
+  }
+async getBusinessOverview(
+  businessId: string,
+  days: number
+): Promise<TapqrBusinessOverview> {
+  const encodedBusinessId = encodeURIComponent(businessId);
+  const encodedDays = encodeURIComponent(String(days));
+
+  const payload = await this.request(
+    `/api/analytics/business/${encodedBusinessId}?days=${encodedDays}`
+  );
+
+  return extractBusinessOverview(payload);
+}
   async getCampaignPerformance(
     businessId: string,
     campaignId: string,
     days: number
   ): Promise<TapqrCampaignPerformance> {
-    const encodedBusinessId =
-      encodeURIComponent(
-        businessId
-      );
+    const encodedBusinessId = encodeURIComponent(businessId);
+    const encodedCampaignId = encodeURIComponent(campaignId);
+    const encodedDays = encodeURIComponent(String(days));
 
-    const encodedCampaignId =
-      encodeURIComponent(
-        campaignId
-      );
-
-    const encodedDays =
-      encodeURIComponent(
-        String(days)
-      );
-
-    const payload =
-      await this.request(
-        `/api/analytics/business/${encodedBusinessId}/campaigns/${encodedCampaignId}?days=${encodedDays}`
-      );
-
-    return extractCampaignPerformance(
-      payload
+    const payload = await this.request(
+      `/api/analytics/business/${encodedBusinessId}/campaigns/${encodedCampaignId}?days=${encodedDays}`
     );
+
+    return extractCampaignPerformance(payload);
   }
 
   async getBusiness(
     businessId: string
   ): Promise<TapqrBusiness> {
-    const encodedBusinessId =
-      encodeURIComponent(
-        businessId
-      );
+    const encodedBusinessId = encodeURIComponent(businessId);
 
-    const payload =
-      await this.request(
-        `/api/businesses/${encodedBusinessId}`
-      );
-
-    return extractBusiness(
-      payload
+    const payload = await this.request(
+      `/api/businesses/${encodedBusinessId}`
     );
+
+    return extractBusiness(payload);
   }
 }

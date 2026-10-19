@@ -1,9 +1,14 @@
+
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import { TapqrApiClient } from "../../integrations/tapqr/index.js";
-import { getBusinessContextInputSchema } from "../../analytics/schema.js";
+import {
+  TapqrApiClient,
+  type TapqrBusiness,
+} from "../../integrations/tapqr/index.js";
 
-import type { TapqrBusiness } from "../../integrations/tapqr/index.js";
+import {
+  getBusinessContextInputSchema,
+} from "../../analytics/schema.js";
 
 function sanitizeBusiness(business: TapqrBusiness) {
   return {
@@ -42,10 +47,11 @@ export function registerGetBusinessContextTool(
       title: "Get Business Context",
 
       description:
-        "Retrieve the TapQR business context for a business. " +
-        "Returns safe business identity, classification, localization, " +
-        "lifecycle, verification, and publishing information. " +
-        "This tool is read-only and does not modify business data.",
+        "Retrieve safe business context from TapQR for a specified " +
+        "business. Returns business identity, classification, " +
+        "localization, lifecycle, verification, and publishing " +
+        "information. Sensitive contact fields and ownership details " +
+        "are excluded from the tool output. Read-only.",
 
       inputSchema: getBusinessContextInputSchema,
 
@@ -64,13 +70,19 @@ export function registerGetBusinessContextTool(
 
       const output = {
         businessId,
+        source: "TapQR business API",
         business: sanitizeBusiness(business),
+        limitations: [
+          "Only the business fields explicitly selected by this tool are returned.",
+          "This tool does not independently verify business claims or verification status.",
+          "The tool does not modify business data.",
+        ],
       };
 
       return {
         content: [
           {
-            type: "text",
+            type: "text" as const,
             text: JSON.stringify(output, null, 2),
           },
         ],

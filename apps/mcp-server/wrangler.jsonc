@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tapqr-agentos-mcp",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-18",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "vars": {
+    "TAPQR_API_BASE_URL": "https://api.tapqr.shop",
+    "TAPQR_API_TIMEOUT_MS": "10000",
+    "NODE_ENV": "production"
+  },
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MCP_OBJECT",
+        "class_name": "TapQRAgentOS"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["TapQRAgentOS"]
+    }
+  ]
+}
