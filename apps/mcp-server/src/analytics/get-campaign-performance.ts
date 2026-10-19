@@ -1,11 +1,12 @@
+
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import {
-  TapqrApiClient
+  TapqrApiClient,
 } from "../integrations/tapqr/index.js";
 
 import {
-  getCampaignPerformanceInputSchema
+  getCampaignPerformanceInputSchema,
 } from "./schema.js";
 
 export function registerGetCampaignPerformanceTool(
@@ -17,26 +18,24 @@ export function registerGetCampaignPerformanceTool(
       title: "Get Campaign Performance",
 
       description:
-        "Retrieve real TapQR campaign performance analytics for a business and campaign. Returns campaign details, analysis period, total scans, total visitors, total conversions, and total conversion value. This tool is read-only and does not modify business data.",
+        "Retrieve real TapQR campaign performance analytics for a " +
+        "specific business and campaign. Returns campaign details, " +
+        "the reporting period, total scans, total visitors, total " +
+        "conversions, and total conversion value as reported by TapQR. " +
+        "This tool is read-only and does not modify business data.",
 
-      inputSchema:
-        getCampaignPerformanceInputSchema,
+      inputSchema: getCampaignPerformanceInputSchema,
 
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
-        openWorldHint: false
-      }
+        openWorldHint: false,
+      },
     },
 
-    async ({
-      businessId,
-      campaignId,
-      days
-    }) => {
-      const client =
-        new TapqrApiClient();
+    async ({ businessId, campaignId, days }) => {
+      const client = new TapqrApiClient();
 
       const performance =
         await client.getCampaignPerformance(
@@ -49,30 +48,44 @@ export function registerGetCampaignPerformanceTool(
         businessId,
         campaignId,
 
-        campaign:
-          performance.campaign,
+        campaign: performance.campaign,
 
-        period:
-          performance.period,
+        period: performance.period,
 
-        summary:
-          performance.summary
+        summary: {
+          totalScans: performance.summary.totalScans,
+          totalVisitors: performance.summary.totalVisitors,
+          totalConversions: performance.summary.totalConversions,
+          totalConversionValue:
+            performance.summary.totalConversionValue,
+        },
+
+        interpretation: {
+          reportingDays: performance.period.days,
+          metricsSource: "TapQR campaign analytics",
+          conversionValueNote:
+            "Total conversion value is reported by TapQR. " +
+            "This tool does not independently calculate revenue " +
+            "or verify the monetary value of conversions.",
+        },
+
+        limitations: [
+          "Metrics reflect the reporting period returned by TapQR.",
+          "Campaign analytics are not independently recalculated by this tool.",
+          "Conversion value should not be interpreted as profit unless the backend explicitly defines it that way.",
+          "This tool does not modify campaign or business data.",
+        ],
       };
 
       return {
         content: [
           {
-            type: "text",
-            text: JSON.stringify(
-              output,
-              null,
-              2
-            )
-          }
+            type: "text" as const,
+            text: JSON.stringify(output, null, 2),
+          },
         ],
 
-        structuredContent:
-          output
+        structuredContent: output,
       };
     }
   );

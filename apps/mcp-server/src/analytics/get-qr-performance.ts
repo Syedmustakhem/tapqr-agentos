@@ -11,74 +11,86 @@ export function registerGetQrPerformanceTool(
     {
       title: "Get QR Performance",
       description:
-        "Analyze QR code performance for a TapQR business. " +
-        "Ranks QR codes by conversion rate and identifies QR codes " +
-        "with visitors but comparatively lower conversion rates. " +
-        "Uses real TapQR journey analytics and is read-only.",
+        "Analyze QR code performance for a TapQR business using " +
+        "real business analytics. Ranks QR codes by lifetime scan " +
+        "count and identifies QR codes with zero recorded scans. " +
+        "Period-specific overview metrics are reported separately. " +
+        "This tool is read-only.",
       inputSchema: getQrPerformanceInputSchema,
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
         idempotentHint: true,
-        openWorldHint: false
-      }
+        openWorldHint: false,
+      },
     },
     async ({ businessId, days, limit }) => {
       const client = new TapqrApiClient();
 
-      const analytics =
-        await client.getQrJourneyAnalytics(businessId, days);
-
-      const qrCodes = [...analytics.byQr];
-
-      const ranked = [...qrCodes].sort(
-        (a, b) =>
-          b.conversionRate - a.conversionRate ||
-          b.converters - a.converters ||
-          b.visitors - a.visitors
+      const analytics = await client.getBusinessOverview(
+        businessId,
+        days
       );
 
-      const topPerformers = ranked
+      // The backend's scanCount is a lifetime count, not a
+      // period-specific count.
+      const qrCodes = [...analytics.qrPerformance].sort(
+        (a, b) => b.scanCount - a.scanCount
+      );
+
+      const topPerformers = qrCodes
+        .filter((qr) => qr.scanCount > 0)
         .slice(0, limit)
         .map((qr, index) => ({
           rank: index + 1,
-          ...qr
+          ...qr,
         }));
 
-      const needsAttention = [...qrCodes]
-        .filter((qr) => qr.visitors > 0)
-        .sort(
-          (a, b) =>
-            a.conversionRate - b.conversionRate ||
-            b.visitors - a.visitors
-        )
-        .slice(0, limit);
+      const needsAttention = qrCodes
+        .filter((qr) => qr.scanCount === 0)
+        .slice(0, limit)
+        .map((qr) => ({
+          ...qr,
+          reason: "No lifetime scans are recorded for this QR code.",
+        }));
 
       const output = {
         businessId,
         period: analytics.period,
         summary: {
+          totalScans: analytics.overview.totalScans,
+          uniqueVisitors: analytics.overview.uniqueVisitors,
+          totalConversions: analytics.overview.totalConversions,
+          conversionRate: analytics.overview.conversionRate,
+          activeQrCodes: analytics.overview.activeQrCodes,
+          totalQrCodes: analytics.overview.totalQrCodes,
           qrCodesAnalyzed: qrCodes.length,
-          qrCodesWithVisitors: qrCodes.filter(
-            (qr) => qr.visitors > 0
-          ).length
+          qrCodesWithRecordedScans: qrCodes.filter(
+            (qr) => qr.scanCount > 0
+          ).length,
+          qrCodesWithZeroRecordedScans: qrCodes.filter(
+            (qr) => qr.scanCount === 0
+          ).length,
         },
         topPerformers,
         needsAttention,
         interpretation:
-          "Performance is ranked using TapQR's reported conversion rates. " +
-          "The attention list highlights relatively lower conversion rates " +
-          "among QR codes with visitors; it does not establish a cause."
+          "The summary metrics cover the requested reporting period. " +
+          "Individual QR codes are ranked by lifetime scan count, " +
+          "because the backend response does not provide period-specific " +
+          "scan counts or per-QR conversion rates. QR codes with zero " +
+          "recorded lifetime scans are highlighted for review. " +
+          "These metrics do not establish the cause of performance.",
       };
 
       return {
         content: [
           {
-            type: "text",
-            text: JSON.stringify(output, null, 2)
-          }
+            type: "text" as const,
+            text: JSON.stringify(output, null, 2),
+          },
         ],
-        structuredContent: output
+        structuredContent: output,
       };
     }
   );

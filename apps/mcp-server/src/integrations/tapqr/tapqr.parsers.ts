@@ -1,47 +1,41 @@
-import {
-  AgentOsError
-} from "../../errors/agentos-error.js";
 
+import {
+  AgentOsError,
+} from "../../errors/agentos-error.js";
+import type {
+  TapqrBusinessOverview,
+} from "./tapqr.types.js";
 import type {
   TapqrJourneyAnalytics,
   TapqrJourneyDailyRow,
   TapqrJourneyFunnelStage,
   TapqrJourneyOverview,
-  TapqrJourneyQrRow
+  TapqrJourneyQrRow,
 } from "./tapqr.types.js";
+
 import type {
   TapqrCampaign,
   TapqrCampaignPerformance,
   TapqrCampaignPerformancePeriod,
-  TapqrCampaignPerformanceSummary
+  TapqrCampaignPerformanceSummary,
 } from "./tapqr.types.js";
+
 import type {
-  TapqrBusiness
+  TapqrBusiness,
 } from "./tapqr.types.js";
 
 function parseCampaign(
   value: unknown
 ): TapqrCampaign {
-  const campaign = asObject(
-    value,
-    "campaign"
-  );
+  const campaign = asObject(value, "campaign");
 
   return {
-    id: asString(
-      campaign.id,
-      "campaign.id"
-    ),
-
+    id: asString(campaign.id, "campaign.id"),
     businessId: asString(
       campaign.businessId,
       "campaign.businessId"
     ),
-
-    name: asString(
-      campaign.name,
-      "campaign.name"
-    ),
+    name: asString(campaign.name, "campaign.name"),
 
     description:
       campaign.description === null
@@ -51,26 +45,17 @@ function parseCampaign(
             "campaign.description"
           ),
 
-    status: asString(
-      campaign.status,
-      "campaign.status"
-    ),
+    status: asString(campaign.status, "campaign.status"),
 
     startsAt:
       campaign.startsAt === null
         ? null
-        : asString(
-            campaign.startsAt,
-            "campaign.startsAt"
-          ),
+        : asString(campaign.startsAt, "campaign.startsAt"),
 
     endsAt:
       campaign.endsAt === null
         ? null
-        : asString(
-            campaign.endsAt,
-            "campaign.endsAt"
-          ),
+        : asString(campaign.endsAt, "campaign.endsAt"),
 
     createdAt: asString(
       campaign.createdAt,
@@ -80,38 +65,38 @@ function parseCampaign(
     updatedAt: asString(
       campaign.updatedAt,
       "campaign.updatedAt"
-    )
+    ),
   };
 }
 
 function parseCampaignPerformanceSummary(
   value: unknown
 ): TapqrCampaignPerformanceSummary {
-  const summary = asObject(
+  const overview = asObject(
     value,
-    "campaign performance summary"
+    "campaign performance overview"
   );
 
   return {
     totalScans: asNumber(
-      summary.totalScans,
-      "summary.totalScans"
+      overview.totalScans,
+      "overview.totalScans"
     ),
 
     totalVisitors: asNumber(
-      summary.totalVisitors,
-      "summary.totalVisitors"
+      overview.uniqueVisitors,
+      "overview.uniqueVisitors"
     ),
 
     totalConversions: asNumber(
-      summary.totalConversions,
-      "summary.totalConversions"
+      overview.totalConversions,
+      "overview.totalConversions"
     ),
 
     totalConversionValue: asNumber(
-      summary.totalConversionValue,
-      "summary.totalConversionValue"
-    )
+      overview.conversionValue,
+      "overview.conversionValue"
+    ),
   };
 }
 
@@ -124,23 +109,121 @@ function parseCampaignPerformancePeriod(
   );
 
   return {
-    days: asNumber(
-      period.days,
-      "period.days"
-    ),
-
+    days: asNumber(period.days, "period.days"),
     startDate: asString(
       period.startDate,
       "period.startDate"
     ),
-
     endDate: asString(
       period.endDate,
       "period.endDate"
-    )
+    ),
   };
 }
+export function extractBusinessOverview(
+  payload: unknown
+): TapqrBusinessOverview {
+  const root = asObject(payload, "business overview response");
+  const data = asObject(root.data, "business overview data");
+  const period = asObject(data.period, "period");
+  const overview = asObject(data.overview, "overview");
 
+  const scansByDay = asArray(
+    data.scansByDay,
+    "scansByDay"
+  ).map((item) => {
+    const row = asObject(item, "scansByDay row");
+
+    return {
+      date: asString(row.date, "scansByDay.date"),
+      scans: asNumber(row.scans, "scansByDay.scans"),
+    };
+  });
+
+  const qrPerformance = asArray(
+    data.qrPerformance,
+    "qrPerformance"
+  ).map((item) => {
+    const row = asObject(item, "qrPerformance row");
+
+    return {
+      id: asString(row.id, "qrPerformance.id"),
+      name: asString(row.name, "qrPerformance.name"),
+      shortCode: asString(
+        row.shortCode,
+        "qrPerformance.shortCode"
+      ),
+      scanCount: asNumber(
+        row.scanCount,
+        "qrPerformance.scanCount"
+      ),
+      status: asString(row.status, "qrPerformance.status"),
+      type: asString(row.type, "qrPerformance.type"),
+      experienceType: asString(
+        row.experienceType,
+        "qrPerformance.experienceType"
+      ),
+      createdAt: asString(
+        row.createdAt,
+        "qrPerformance.createdAt"
+      ),
+      updatedAt: asString(
+        row.updatedAt,
+        "qrPerformance.updatedAt"
+      ),
+    };
+  });
+
+  return {
+    period: {
+      days: asNumber(period.days, "period.days"),
+      startDate: asString(period.startDate, "period.startDate"),
+      endDate: asString(period.endDate, "period.endDate"),
+    },
+    overview: {
+      totalScans: asNumber(
+        overview.totalScans, "overview.totalScans"
+      ),
+      uniqueVisitors: asNumber(
+        overview.uniqueVisitors, "overview.uniqueVisitors"
+      ),
+      previousPeriodScans: asNumber(
+        overview.previousPeriodScans, "overview.previousPeriodScans"
+      ),
+      percentageChange: asNumber(
+        overview.percentageChange, "overview.percentageChange"
+      ),
+      activeQrCodes: asNumber(
+        overview.activeQrCodes, "overview.activeQrCodes"
+      ),
+      totalQrCodes: asNumber(
+        overview.totalQrCodes, "overview.totalQrCodes"
+      ),
+      averageDailyScans: asNumber(
+        overview.averageDailyScans, "overview.averageDailyScans"
+      ),
+      totalConversions: asNumber(
+        overview.totalConversions, "overview.totalConversions"
+      ),
+      uniqueConverters: asNumber(
+        overview.uniqueConverters, "overview.uniqueConverters"
+      ),
+      conversionRate: asNumber(
+        overview.conversionRate, "overview.conversionRate"
+      ),
+      previousPeriodConversions: asNumber(
+        overview.previousPeriodConversions,
+        "overview.previousPeriodConversions"
+      ),
+      conversionPercentageChange: asNumber(
+        overview.conversionPercentageChange,
+        "overview.conversionPercentageChange"
+      ),
+    },
+    scansByDay,
+    qrPerformance,
+  };
+}
 export function extractCampaignPerformance(
   payload: unknown
 ): TapqrCampaignPerformance {
@@ -155,19 +238,18 @@ export function extractCampaignPerformance(
   );
 
   return {
-    campaign: parseCampaign(
-      data.campaign
-    ),
+    campaign: parseCampaign(data.campaign),
 
     period: parseCampaignPerformancePeriod(
       data.period
     ),
 
     summary: parseCampaignPerformanceSummary(
-      data.summary
-    )
+      data.overview
+    ),
   };
 }
+
 function isRecord(
   value: unknown
 ): value is Record<string, unknown> {
@@ -251,10 +333,7 @@ function asNullableString(
 export function extractBusiness(
   payload: unknown
 ): TapqrBusiness {
-  const root = asObject(
-    payload,
-    "business response"
-  );
+  const root = asObject(payload, "business response");
 
   if (root.success !== true) {
     throw new AgentOsError(
@@ -263,42 +342,75 @@ export function extractBusiness(
     );
   }
 
-  const data = asObject(
-    root.data,
-    "business data"
-  );
+  const data = asObject(root.data, "business data");
 
   return {
     id: asString(data.id, "business.id"),
     ownerId: asString(data.ownerId, "business.ownerId"),
     name: asString(data.name, "business.name"),
-    legalName: asNullableString(data.legalName, "business.legalName"),
-    displayName: asNullableString(data.displayName, "business.displayName"),
+    legalName: asNullableString(
+      data.legalName,
+      "business.legalName"
+    ),
+    displayName: asNullableString(
+      data.displayName,
+      "business.displayName"
+    ),
     slug: asString(data.slug, "business.slug"),
-    businessType: asNullableString(data.businessType, "business.businessType"),
-    industry: asNullableString(data.industry, "business.industry"),
-    category: asNullableString(data.category, "business.category"),
-    subcategory: asNullableString(data.subcategory, "business.subcategory"),
+    businessType: asNullableString(
+      data.businessType,
+      "business.businessType"
+    ),
+    industry: asNullableString(
+      data.industry,
+      "business.industry"
+    ),
+    category: asNullableString(
+      data.category,
+      "business.category"
+    ),
+    subcategory: asNullableString(
+      data.subcategory,
+      "business.subcategory"
+    ),
     email: asNullableString(data.email, "business.email"),
     phone: asNullableString(data.phone, "business.phone"),
-    website: asNullableString(data.website, "business.website"),
-    whatsapp: asNullableString(data.whatsapp, "business.whatsapp"),
+    website: asNullableString(
+      data.website,
+      "business.website"
+    ),
+    whatsapp: asNullableString(
+      data.whatsapp,
+      "business.whatsapp"
+    ),
     logo: asNullableString(data.logo, "business.logo"),
-    coverImage: asNullableString(data.coverImage, "business.coverImage"),
-    description: asNullableString(data.description, "business.description"),
+    coverImage: asNullableString(
+      data.coverImage,
+      "business.coverImage"
+    ),
+    description: asNullableString(
+      data.description,
+      "business.description"
+    ),
     timezone: asString(data.timezone, "business.timezone"),
     currency: asString(data.currency, "business.currency"),
     language: asString(data.language, "business.language"),
     country: asString(data.country, "business.country"),
     status: asString(data.status, "business.status"),
-    isVerified: asBoolean(data.isVerified, "business.isVerified"),
-    isPublished: asBoolean(data.isPublished, "business.isPublished"),
+    isVerified: asBoolean(
+      data.isVerified,
+      "business.isVerified"
+    ),
+    isPublished: asBoolean(
+      data.isPublished,
+      "business.isPublished"
+    ),
     onboardingCompleted: asBoolean(
       data.onboardingCompleted,
       "business.onboardingCompleted"
     ),
     createdAt: asString(data.createdAt, "business.createdAt"),
-    updatedAt: asString(data.updatedAt, "business.updatedAt")
+    updatedAt: asString(data.updatedAt, "business.updatedAt"),
   };
 }
 
@@ -319,187 +431,150 @@ function asArray(
 function parseOverview(
   value: unknown
 ): TapqrJourneyOverview {
-  const overview = asObject(
-    value,
-    "journey overview"
-  );
+  const overview = asObject(value, "journey overview");
 
   return {
     uniqueVisitors: asNumber(
       overview.uniqueVisitors,
       "overview.uniqueVisitors"
     ),
-
     firstTimeVisitors: asNumber(
       overview.firstTimeVisitors,
       "overview.firstTimeVisitors"
     ),
-
     repeatVisitors: asNumber(
       overview.repeatVisitors,
       "overview.repeatVisitors"
     ),
-
     repeatVisitorRate: asNumber(
       overview.repeatVisitorRate,
       "overview.repeatVisitorRate"
     ),
-
     totalIdentifiedScans: asNumber(
       overview.totalIdentifiedScans,
       "overview.totalIdentifiedScans"
     ),
-
     averageScansPerVisitor: asNumber(
       overview.averageScansPerVisitor,
       "overview.averageScansPerVisitor"
     ),
-
     totalConversions: asNumber(
       overview.totalConversions,
       "overview.totalConversions"
     ),
-
     uniqueConverters: asNumber(
       overview.uniqueConverters,
       "overview.uniqueConverters"
     ),
-
     visitorConversionRate: asNumber(
       overview.visitorConversionRate,
       "overview.visitorConversionRate"
     ),
-
     conversionsAfterRepeatVisit: asNumber(
       overview.conversionsAfterRepeatVisit,
       "overview.conversionsAfterRepeatVisit"
     ),
-
     averageTimeToConversionSeconds: asNumber(
       overview.averageTimeToConversionSeconds,
       "overview.averageTimeToConversionSeconds"
-    )
+    ),
   };
 }
 
 function parseFunnel(
   value: unknown
 ): TapqrJourneyFunnelStage[] {
-  const rows = asArray(
-    value,
-    "journey funnel"
-  );
+  const rows = asArray(value, "journey funnel");
 
-  return rows.map(
-    (row, index) => {
-      const item = asObject(
-        row,
-        `journey funnel row ${index}`
-      );
+  return rows.map((row, index) => {
+    const item = asObject(
+      row,
+      `journey funnel row ${index}`
+    );
 
-      return {
-        stage: asString(
-          item.stage,
-          `journey funnel row ${index}.stage`
-        ),
-
-        visitors: asNumber(
-          item.visitors,
-          `journey funnel row ${index}.visitors`
-        )
-      };
-    }
-  );
+    return {
+      stage: asString(
+        item.stage,
+        `journey funnel row ${index}.stage`
+      ),
+      visitors: asNumber(
+        item.visitors,
+        `journey funnel row ${index}.visitors`
+      ),
+    };
+  });
 }
 
 function parseDailyJourney(
   value: unknown
 ): TapqrJourneyDailyRow[] {
-  const rows = asArray(
-    value,
-    "daily journey"
-  );
+  const rows = asArray(value, "daily journey");
 
-  return rows.map(
-    (row, index) => {
-      const item = asObject(
-        row,
-        `daily journey row ${index}`
-      );
+  return rows.map((row, index) => {
+    const item = asObject(
+      row,
+      `daily journey row ${index}`
+    );
 
-      return {
-        date: asString(
-          item.date,
-          `daily journey row ${index}.date`
-        ),
-
-        visitors: asNumber(
-          item.visitors,
-          `daily journey row ${index}.visitors`
-        ),
-
-        repeatVisitors: asNumber(
-          item.repeatVisitors,
-          `daily journey row ${index}.repeatVisitors`
-        ),
-
-        converters: asNumber(
-          item.converters,
-          `daily journey row ${index}.converters`
-        )
-      };
-    }
-  );
+    return {
+      date: asString(
+        item.date,
+        `daily journey row ${index}.date`
+      ),
+      visitors: asNumber(
+        item.visitors,
+        `daily journey row ${index}.visitors`
+      ),
+      repeatVisitors: asNumber(
+        item.repeatVisitors,
+        `daily journey row ${index}.repeatVisitors`
+      ),
+      converters: asNumber(
+        item.converters,
+        `daily journey row ${index}.converters`
+      ),
+    };
+  });
 }
 
 function parseByQr(
   value: unknown
 ): TapqrJourneyQrRow[] {
-  const rows = asArray(
-    value,
-    "journey QR breakdown"
-  );
+  const rows = asArray(value, "journey QR breakdown");
 
-  return rows.map(
-    (row, index) => {
-      const item = asObject(
-        row,
-        `journey QR row ${index}`
-      );
+  return rows.map((row, index) => {
+    const item = asObject(
+      row,
+      `journey QR row ${index}`
+    );
 
-      return {
-        qrCodeId: asString(
-          item.qrCodeId,
-          `journey QR row ${index}.qrCodeId`
-        ),
-
-        qrName: asString(
-          item.qrName,
-          `journey QR row ${index}.qrName`
-        ),
-
-        visitors: asNumber(
-          item.visitors,
-          `journey QR row ${index}.visitors`
-        ),
-
-        repeatVisitors: asNumber(
-          item.repeatVisitors,
-          `journey QR row ${index}.repeatVisitors`
-        ),
-
-        converters: asNumber(
-          item.converters,
-          `journey QR row ${index}.converters`
-        ),
-
-        conversionRate: asNumber(
-          item.conversionRate,
-          `journey QR row ${index}.conversionRate`
-        )
-      };
-    }
-  );
+    return {
+      qrCodeId: asString(
+        item.qrCodeId,
+        `journey QR row ${index}.qrCodeId`
+      ),
+      qrName: asString(
+        item.qrName,
+        `journey QR row ${index}.qrName`
+      ),
+      visitors: asNumber(
+        item.visitors,
+        `journey QR row ${index}.visitors`
+      ),
+      repeatVisitors: asNumber(
+        item.repeatVisitors,
+        `journey QR row ${index}.repeatVisitors`
+      ),
+      converters: asNumber(
+        item.converters,
+        `journey QR row ${index}.converters`
+      ),
+      conversionRate: asNumber(
+        item.conversionRate,
+        `journey QR row ${index}.conversionRate`
+      ),
+    };
+  });
 }
 
 export function extractJourneyAnalytics(
@@ -519,11 +594,8 @@ export function extractJourneyAnalytics(
    *   result
    * )
    *
-   * The normal response contract is expected to expose
+   * The normal response contract exposes
    * the service result under `data`.
-   *
-   * We intentionally validate the envelope rather than
-   * trusting arbitrary JSON from the upstream service.
    */
   const data = asObject(
     root.data,
@@ -537,36 +609,20 @@ export function extractJourneyAnalytics(
 
   return {
     period: {
-      days: asNumber(
-        period.days,
-        "period.days"
-      ),
-
+      days: asNumber(period.days, "period.days"),
       startDate: asString(
         period.startDate,
         "period.startDate"
       ),
-
       endDate: asString(
         period.endDate,
         "period.endDate"
-      )
+      ),
     },
 
-    overview: parseOverview(
-      data.overview
-    ),
-
-    funnel: parseFunnel(
-      data.funnel
-    ),
-
-    dailyJourney: parseDailyJourney(
-      data.dailyJourney
-    ),
-
-    byQr: parseByQr(
-      data.byQr
-    )
+    overview: parseOverview(data.overview),
+    funnel: parseFunnel(data.funnel),
+    dailyJourney: parseDailyJourney(data.dailyJourney),
+    byQr: parseByQr(data.byQr),
   };
 }
